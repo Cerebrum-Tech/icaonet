@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 from PIL import Image
 from src.data_structures import Point, Rect
 from src.iso_standard import PhotographicRequirements
-from src.iso_standard import PhotographicRequirements
+
 
 # Constants
 IMAGE_SIZE = (160, 160)
@@ -17,10 +17,12 @@ MODEL_ICAONET = "resources/models/icaonet.h5"
 # Initialize the Flask application
 app = Flask(__name__)
 
+print("Num GPUs Available: ", len(
+    tf.config.experimental.list_physical_devices('GPU')))
+
 
 def load_graph_from_pb(pb_file):
     graph = tf.Graph()
-    graph_def = tf.compat.v1.GraphDef()
     graph_def = tf.compat.v1.GraphDef()
     graph_def.ParseFromString(open(pb_file, "rb").read())
 
@@ -55,7 +57,6 @@ def run_face_detector(image):
 
     best_rect = boxes.squeeze()[scores.squeeze().argmax()]
     best_rect = best_rect * [height, width, height, width]
-    best_rect = best_rect.astype(np.int32)
     best_rect = best_rect.astype(np.int32)
     y1, x1, y2, x2 = best_rect
     return Rect.from_tl_br_points((x1, y1), (x2, y2))
@@ -103,8 +104,9 @@ def run_icaonet(image):
     input_image = np.expand_dims(
         resized_image, axis=0) / 255.0  # Normalize the image
 
-    model = load_model(MODEL_ICAONET)
-    return model.predict(input_image)
+    with tf.device('/GPU:0'):  # Force TensorFlow to use the GPU
+        model = load_model(MODEL_ICAONET)
+        return model.predict(input_image)
 
 
 @app.route("/predict", methods=["POST"])
