@@ -7,6 +7,7 @@ from flask import Flask, request, jsonify
 from PIL import Image
 from src.data_structures import Point, Rect
 from src.iso_standard import PhotographicRequirements
+from src.iso_standard import PhotographicRequirements
 
 # Constants
 IMAGE_SIZE = (160, 160)
@@ -19,6 +20,7 @@ app = Flask(__name__)
 
 def load_graph_from_pb(pb_file):
     graph = tf.Graph()
+    graph_def = tf.compat.v1.GraphDef()
     graph_def = tf.compat.v1.GraphDef()
     graph_def.ParseFromString(open(pb_file, "rb").read())
 
@@ -53,6 +55,7 @@ def run_face_detector(image):
 
     best_rect = boxes.squeeze()[scores.squeeze().argmax()]
     best_rect = best_rect * [height, width, height, width]
+    best_rect = best_rect.astype(np.int32)
     best_rect = best_rect.astype(np.int32)
     y1, x1, y2, x2 = best_rect
     return Rect.from_tl_br_points((x1, y1), (x2, y2))
