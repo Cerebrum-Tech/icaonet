@@ -1,5 +1,4 @@
-version: "3.8"
-
+version: "3.3"
 services:
   app:
     build:
@@ -10,3 +9,23 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+    environment:
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - LETSENCRYPT_HOST=${LETSENCRYPT_HOST}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+
+  ceresite:
+    container_name: ${CONTAINER_NAME}
+    build: .
+    restart: always
+    environment:
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - LETSENCRYPT_HOST=${LETSENCRYPT_HOST}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    volumes:
+      - ./public:/app/public
+
+networks:
+  default:
+    external:
+      name: webproxy
