@@ -1,13 +1,12 @@
+from flask import Flask, request, jsonify
 import io
 import tensorflow as tf
 import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
-from flask import Flask, request, jsonify
 from PIL import Image
 from src.data_structures import Point, Rect
 from src.iso_standard import PhotographicRequirements
-
 
 # Constants
 IMAGE_SIZE = (160, 160)
@@ -109,8 +108,9 @@ def run_icaonet(image):
         return model.predict(input_image)
 
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict", methods=["POST"], )
 def predict():
+    
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
 
@@ -157,11 +157,19 @@ def predict():
             # Convert y_pred to a dictionary mapping each attribute name to its corresponding prediction value
             predictions = {attr: float(pred) for attr, pred in zip(
                 attribute_names, y_pred.squeeze())}
+                
 
-            return jsonify(predictions)
+
+
+            response = jsonify(predictions)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            return response
+
+            
+        
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5050, debug=True)
